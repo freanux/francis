@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CodeLite_Workspace Name="Francis" Database="" SWTLW="No">
   <Project Name="Francis" Path="Francis/Francis.project" Active="Yes"/>
+  <Project Name="LevelEditor" Path="LevelEditor/LevelEditor.project" Active="No"/>
   <BuildMatrix>
     <WorkspaceConfiguration Name="Debug" Selected="yes">
       <Project Name="Francis" ConfigName="Debug"/>
+      <Project Name="LevelEditor" ConfigName="Debug"/>
     </WorkspaceConfiguration>
     <WorkspaceConfiguration Name="Release" Selected="yes">
       <Project Name="Francis" ConfigName="Release"/>
+      <Project Name="LevelEditor" ConfigName="Release"/>
     </WorkspaceConfiguration>
   </BuildMatrix>
 </CodeLite_Workspace>
