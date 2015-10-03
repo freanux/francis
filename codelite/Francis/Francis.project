@@ -95,4 +95,26 @@
     <VirtualDirectory Name="src"/>
     <File Name="../../src/Francis/main.cpp"/>
   </VirtualDirectory>
+  <VirtualDirectory Name="shared">
+    <VirtualDirectory Name="include">
+      <File Name="../../src/shared/include/Directory.hpp"/>
+      <File Name="../../src/shared/include/Exception.hpp"/>
+      <File Name="../../src/shared/include/KeyValue.hpp"/>
+      <File Name="../../src/shared/include/PNG.hpp"/>
+      <File Name="../../src/shared/include/Timing.hpp"/>
+      <File Name="../../src/shared/include/Utils.hpp"/>
+      <File Name="../../src/shared/include/Zip.hpp"/>
+      <File Name="../../src/shared/include/ZipReader.hpp"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="src">
+      <File Name="../../src/shared/src/Directory.cpp"/>
+      <File Name="../../src/shared/src/Exception.cpp"/>
+      <File Name="../../src/shared/src/KeyValue.cpp"/>
+      <File Name="../../src/shared/src/PNG.cpp"/>
+      <File Name="../../src/shared/src/Timing.cpp"/>
+      <File Name="../../src/shared/src/Utils.cpp"/>
+      <File Name="../../src/shared/src/Zip.cpp"/>
+      <File Name="../../src/shared/src/ZipReader.cpp"/>
+    </VirtualDirectory>
+  </VirtualDirectory>
 </CodeLite_Project>
