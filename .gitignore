@@ -1,0 +1,17 @@
+*.o
+*.orig
+.deps
+.dirstamp
+autom4te.cache
+config.log
+config.status
+libtool
+Francis.mk
+Francis.txt
+Makefile
+codelite/.codelite
+codelite/.tern-port
+codelite/.tern-project
+codelite/Francis/Debug
+codelite/Francis/Release
+
