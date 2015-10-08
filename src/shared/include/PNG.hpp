@@ -1,5 +1,5 @@
-#ifndef PNG_HPP
-#define PNG_HPP
+#ifndef _PNG_HPP_
+#define _PNG_HPP_
 
 #include "Exception.hpp"
 #include "ZipReader.hpp"

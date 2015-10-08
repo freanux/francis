@@ -1,5 +1,5 @@
-#ifndef KEYVALUE_HPP
-#define KEYVALUE_HPP
+#ifndef _KEYVALUE_HPP_
+#define _KEYVALUE_HPP_
 
 #include "Exception.hpp"
 #include "Utils.hpp"

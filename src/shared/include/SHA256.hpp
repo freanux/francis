@@ -1,5 +1,5 @@
-#ifndef SHA256_HPP
-#define SHA256_HPP
+#ifndef _SHA256_HPP_
+#define _SHA256_HPP_
 
 #include <string>
 

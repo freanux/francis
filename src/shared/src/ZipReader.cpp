@@ -99,7 +99,7 @@ bool ZipReader::equals_directory(const File& file, const std::string& directory)
     return false;
 }
 
-const char *ZipReader::extract(std::string filename, size_t *out_sz) throw (ZipReaderException) {
+void ZipReader::extract(std::string filename, ZipSink& sink) throw (ZipReaderException) {
     std::replace(filename.begin(), filename.end(), '\\', '/');
     const File& file = get_file(filename);
 
@@ -107,10 +107,10 @@ const char *ZipReader::extract(std::string filename, size_t *out_sz) throw (ZipR
     fseek(f, file.ofs, SEEK_SET);
     size_t sz = fread(buffer, 1, 30, f);
     if (sz != 30) {
-        throw_inflate_failed(0, 0, filename);
+        throw_inflate_failed(filename);
     }
     if (memcmp(buffer, "PK\003\004", 4)) {
-        throw_inflate_failed(0, 0, filename);
+        throw_inflate_failed(filename);
     }
     int cmpr_sz = buffer[21] << 24 | buffer[20] << 16 | buffer[19] << 8 | buffer[18];
     int ucmpr_sz = buffer[25] << 24 | buffer[24] << 16 | buffer[23] << 8 | buffer[22];
@@ -118,76 +118,60 @@ const char *ZipReader::extract(std::string filename, size_t *out_sz) throw (ZipR
     int xln = buffer[29] << 8 | buffer[28];
 
     /* extract */
-    char *data = new char[ucmpr_sz];
+    sink.open(static_cast<size_t>(ucmpr_sz));
     fseek(f, file.ofs + 30 + len + xln, SEEK_SET);
     if (cmpr_sz == ucmpr_sz) {
         /* plain copy */
-        sz = fread(data, 1, cmpr_sz, f);
-        if (sz != static_cast<size_t>(cmpr_sz)) {
-            throw_inflate_failed(0, data, filename);
+        const size_t outbuf_sz = sizeof outbuf;
+        size_t total_size = static_cast<size_t>(cmpr_sz);
+        while (total_size) {
+            size_t size = (total_size > outbuf_sz ? outbuf_sz : total_size);
+            if (fread(outbuf, 1, size, f) != size) {
+                throw_inflate_failed(filename);
+            }
+            sink.write(outbuf, size);
+            total_size -= size;
         }
     } else {
         /* uncompress */
-        z_stream z;
-        memset(&z, 0, sizeof(z_stream));
-        char *dst = data;
-        int status = inflateInit2(&z, -MAX_WBITS);
-        if (status != Z_OK) {
-            throw_inflate_failed(&z, data, filename);
-        }
-
         const int bsz = sizeof buffer;
-        do {
-            z.next_in = buffer;
-            if (cmpr_sz > bsz) {
-                z.avail_in = bsz;
-            } else {
-                z.avail_in = cmpr_sz;
-            }
-            z.avail_in = fread(z.next_in, 1, z.avail_in, f);
-            while (z.avail_in && status == Z_OK) {
-                z.next_out = outbuf;
-                z.avail_out = bsz;
-                status = inflate(&z, Z_NO_FLUSH);
-                int c = bsz - z.avail_out;
-                if (c) {
-                    memcpy(dst, outbuf, c);
-                    dst += c;
+        try {
+            ZStream z;
+            int status = Z_OK;
+            do {
+                z.next_in = buffer;
+                if (cmpr_sz > bsz) {
+                    z.avail_in = bsz;
+                } else {
+                    z.avail_in = cmpr_sz;
                 }
+                z.avail_in = fread(z.next_in, 1, z.avail_in, f);
+                while (z.avail_in && status == Z_OK) {
+                    z.next_out = outbuf;
+                    z.avail_out = bsz;
+                    status = z.inflate(Z_NO_FLUSH);
+                    int c = bsz - z.avail_out;
+                    if (c) {
+                        sink.write(outbuf, c);
+                    }
+                }
+                cmpr_sz -= bsz;
+            } while (cmpr_sz > 0 && status == Z_OK);
+            if (status != Z_STREAM_END) {
+                throw_inflate_failed(filename + " (" + z.msg + ")");
             }
-            cmpr_sz -= bsz;
-        } while (cmpr_sz > 0 && status == Z_OK);
-        if (status != Z_STREAM_END) {
-            throw_inflate_failed(&z, data, filename + " (" + z.msg + ")");
+        } catch (const ZipSinkException& e) {
+            throw_inflate_failed(e.what());
         }
-        inflateEnd(&z);
-    }
-
-    if (out_sz) {
-        *out_sz = static_cast<size_t>(ucmpr_sz);
-    }
-
-    return data;
-}
-
-void ZipReader::destroy(const char *data) {
-    if (data) {
-        delete[] data;
     }
 }
 
-void ZipReader::throw_corrupt_file(const std::string& filename) throw (ZipReaderException) {
-    throw ZipReaderException("Corrupt package file: " + filename);
+void ZipReader::throw_corrupt_file(const std::string& msg) throw (ZipReaderException) {
+    throw ZipReaderException("Corrupt package file: " + msg);
 }
 
-void ZipReader::throw_inflate_failed(z_stream *z, const char *data, const std::string& filename) throw (ZipReaderException) {
-    if (z) {
-        inflateEnd(z);
-    }
-    if (data) {
-        destroy(data);
-    }
-    throw ZipReaderException("Inflate failed: " + filename);
+void ZipReader::throw_inflate_failed(const std::string& msg) throw (ZipReaderException) {
+    throw ZipReaderException("Inflate failed: " + msg);
 }
 
 const ZipReader::File& ZipReader::get_file(const std::string& filename) throw (ZipReaderException) {

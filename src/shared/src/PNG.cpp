@@ -1,4 +1,5 @@
 #include "PNG.hpp"
+#include "ZipSinkMemory.hpp"
 
 #include <cstdio>
 #include <cstring>
@@ -195,99 +196,90 @@ void PNG::read_png_from_file(const std::string& filename) throw (PNGException) {
 
 void PNG::read_png_from_zip(const std::string& filename, ZipReader *zip) throw (PNGException) {
     PNGZipStream zs(zip);
+    ZipSinkMemory sink;
 
     try {
-        zs.data = zs.ptr = zip->extract(filename, &zs.size);
+        zip->extract(filename, sink);
+        zs.data = zs.ptr = static_cast<const char *>(sink.get_data());
     } catch (const ZipReaderException& e) {
         throw PNGException(e.what());
     }
 
-    try {
-        png_bytep pdta = reinterpret_cast<png_bytep>(const_cast<char *>(zs.data));
-        png_structp png_ptr;
-        png_infop info_ptr;
+    png_bytep pdta = reinterpret_cast<png_bytep>(const_cast<char *>(zs.data));
+    png_structp png_ptr;
+    png_infop info_ptr;
 
-        /* check header */
-        if (png_sig_cmp(pdta, 0, 8)) {
-            throw PNGException("File is not recognized as PNG file: " + filename);
-        }
-        //pdta += 8;
+    /* check header */
+    if (png_sig_cmp(pdta, 0, 8)) {
+        throw PNGException("File is not recognized as PNG file: " + filename);
+    }
+    //pdta += 8;
 
-        /* initialize png */
-        png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
-        if (!png_ptr) {
-            throw PNGException("png_create_read_struct() failed");
-        }
+    /* initialize png */
+    png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
+    if (!png_ptr) {
+        throw PNGException("png_create_read_struct() failed");
+    }
 
-        info_ptr = png_create_info_struct(png_ptr);
-        if (!info_ptr) {
-            png_destroy_read_struct(&png_ptr, 0, 0);
-            throw PNGException("png_create_info_struct() failed");
-        }
+    info_ptr = png_create_info_struct(png_ptr);
+    if (!info_ptr) {
+        png_destroy_read_struct(&png_ptr, 0, 0);
+        throw PNGException("png_create_info_struct() failed");
+    }
 
-        /* setup error handler */
-        if (setjmp(png_jmpbuf(png_ptr))) {
-            png_destroy_read_struct(&png_ptr, 0, 0);
-            throw PNGException("setjmp of png_jmpbuf() failed");
-        }
-
-        /* read header informations */
-        png_set_read_fn(png_ptr, &zs, user_data_read);
-        //png_set_sig_bytes(png_ptr, 8);
-        png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_EXPAND, 0);
-
-        png_uint_32 _width;
-        png_uint_32 _height;
-        int color_type;
-        png_get_IHDR(png_ptr, info_ptr, &_width, &_height, &bit_depth, &color_type,
-            0, 0, 0);
-
-        width = static_cast<unsigned int>(_width);
-        height = static_cast<unsigned int>(_height);
-
-        switch (color_type) {
-            case PNG_COLOR_TYPE_RGB:
-                color_format = ColorFormatRGB;
-                break;
-
-            case PNG_COLOR_TYPE_RGBA:
-                color_format = ColorFormatRGBA;
-                break;
-
-            default:
-                png_destroy_read_struct(&png_ptr, 0, 0);
-                throw PNGException("Unrecognized PNG color type: " + filename);
-                break;
-        }
-
-        if (bit_depth != 8) {
-            png_destroy_read_struct(&png_ptr, 0, 0);
-            throw PNGException("Invalid PNG bit depth, must be 8: " + filename);
-        }
-
-        /* read data stream */
-        unsigned int row_bytes = png_get_rowbytes(png_ptr, info_ptr);
-        pic = new unsigned char[row_bytes * height];
-        png_bytepp rows = png_get_rows(png_ptr, info_ptr);
-
-        unsigned char *dest = pic;
-        for (unsigned int i = 0; i < height; i++) {
-            memcpy(dest, rows[i], row_bytes);
-            dest += row_bytes;
-        }
-
-        /* clean up and close file */
+    /* setup error handler */
+    if (setjmp(png_jmpbuf(png_ptr))) {
         png_destroy_read_struct(&png_ptr, &info_ptr, 0);
-    } catch (const PNGException& e) {
-        if (zs.data) {
-            zip->destroy(zs.data);
-        }
-        throw;
+        throw PNGException("setjmp of png_jmpbuf() failed");
     }
 
-    if (zs.data) {
-        zip->destroy(zs.data);
+    /* read header informations */
+    png_set_read_fn(png_ptr, &zs, user_data_read);
+    //png_set_sig_bytes(png_ptr, 8);
+    png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_EXPAND, 0);
+
+    png_uint_32 _width;
+    png_uint_32 _height;
+    int color_type;
+    png_get_IHDR(png_ptr, info_ptr, &_width, &_height, &bit_depth, &color_type,
+        0, 0, 0);
+
+    width = static_cast<unsigned int>(_width);
+    height = static_cast<unsigned int>(_height);
+
+    switch (color_type) {
+        case PNG_COLOR_TYPE_RGB:
+            color_format = ColorFormatRGB;
+            break;
+
+        case PNG_COLOR_TYPE_RGBA:
+            color_format = ColorFormatRGBA;
+            break;
+
+        default:
+            png_destroy_read_struct(&png_ptr, &info_ptr, 0);
+            throw PNGException("Unrecognized PNG color type: " + filename);
+            break;
     }
+
+    if (bit_depth != 8) {
+        png_destroy_read_struct(&png_ptr, &info_ptr, 0);
+        throw PNGException("Invalid PNG bit depth, must be 8: " + filename);
+    }
+
+    /* read data stream */
+    unsigned int row_bytes = png_get_rowbytes(png_ptr, info_ptr);
+    pic = new unsigned char[row_bytes * height];
+    png_bytepp rows = png_get_rows(png_ptr, info_ptr);
+
+    unsigned char *dest = pic;
+    for (unsigned int i = 0; i < height; i++) {
+        memcpy(dest, rows[i], row_bytes);
+        dest += row_bytes;
+    }
+
+    /* clean up and close file */
+    png_destroy_read_struct(&png_ptr, &info_ptr, 0);
 }
 
 void PNG::user_data_read(png_structp png_ptr, png_bytep data, png_size_t len) {

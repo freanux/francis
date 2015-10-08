@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CodeLite_Project Name="Francis" InternalType="Console">
   <Plugins>
+    <Plugin Name="qmake">
+      <![CDATA[00020001N0005Debug0000000000000001N0007Release000000000000]]>
+    </Plugin>
     <Plugin Name="CMakePlugin">
       <![CDATA[[{
   "name": "Debug",
@@ -22,9 +25,6 @@
   "parentProject": ""
  }]]]>
     </Plugin>
-    <Plugin Name="qmake">
-      <![CDATA[00020001N0005Debug0000000000000001N0007Release000000000000]]>
-    </Plugin>
   </Plugins>
   <Description/>
   <Dependencies/>
@@ -45,6 +45,11 @@
       <File Name="../../src/shared/include/ZipReader.hpp"/>
       <File Name="../../src/shared/include/Subsystem.hpp"/>
       <File Name="../../src/shared/include/SHA256.hpp"/>
+      <File Name="../../src/shared/include/Scope.hpp"/>
+      <File Name="../../src/shared/include/ZipSink.hpp"/>
+      <File Name="../../src/shared/include/ZipSinkMemory.hpp"/>
+      <File Name="../../src/shared/include/Mutex.hpp"/>
+      <File Name="../../src/shared/include/Thread.hpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="src">
       <File Name="../../src/shared/src/Directory.cpp"/>
@@ -57,6 +62,10 @@
       <File Name="../../src/shared/src/ZipReader.cpp"/>
       <File Name="../../src/shared/src/Subsystem.cpp"/>
       <File Name="../../src/shared/src/SHA256.cpp"/>
+      <File Name="../../src/shared/src/ZipSink.cpp"/>
+      <File Name="../../src/shared/src/ZipSinkMemory.cpp"/>
+      <File Name="../../src/shared/src/Mutex.cpp"/>
+      <File Name="../../src/shared/src/Thread.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="zlib">
       <File Name="../../src/shared/zlib/adler32.c"/>

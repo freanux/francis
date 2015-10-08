@@ -1,5 +1,5 @@
-#ifndef UTILS_HPP
-#define UTILS_HPP
+#ifndef _UTILS_HPP_
+#define _UTILS_HPP_
 
 #include "Exception.hpp"
 

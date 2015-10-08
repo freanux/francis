@@ -1,4 +1,5 @@
 #include "KeyValue.hpp"
+#include "ZipSinkMemory.hpp"
 
 #include <fstream>
 #include <cstring>
@@ -96,7 +97,9 @@ void KeyValue::read(const std::string& filename, ZipReader *zip) throw (KeyValue
         /* zip file */
         size_t sz;
         try {
-            const char *data = zip->extract(filename, &sz);
+            ZipSinkMemory sink;
+            zip->extract(filename, sink);
+            const char *data = static_cast<const char *>(sink.get_data());
             const char *dptr = data;
             std::string line;
             while (sz) {
@@ -111,7 +114,6 @@ void KeyValue::read(const std::string& filename, ZipReader *zip) throw (KeyValue
                 dptr++;
                 sz--;
             }
-            zip->destroy(data);
         } catch (const ZipReaderException& e) {
             throw KeyValueException(e.what());
         }

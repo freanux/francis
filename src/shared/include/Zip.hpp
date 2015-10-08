@@ -1,5 +1,5 @@
-#ifndef ZIP_HPP
-#define ZIP_HPP
+#ifndef _ZIP_HPP_
+#define _ZIP_HPP_
 
 #include "Exception.hpp"
 
@@ -13,6 +13,14 @@ class ZipException : public Exception {
 public:
     ZipException(const char *msg) : Exception(msg) { }
     ZipException(const std::string& msg) : Exception(msg) { }
+};
+
+class ZStream : public z_stream {
+public:
+    ZStream() throw (ZipException);
+    ~ZStream();
+
+    int inflate(int flush);
 };
 
 class Zip {

@@ -1,5 +1,5 @@
-#ifndef DIRECTORY_HPP
-#define DIRECTORY_HPP
+#ifndef _DIRECTORY_HPP_
+#define _DIRECTORY_HPP_
 
 #include "Exception.hpp"
 #include "ZipReader.hpp"

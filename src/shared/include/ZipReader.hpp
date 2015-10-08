@@ -1,7 +1,8 @@
-#ifndef ZIPREADER_HPP
-#define ZIPREADER_HPP
+#ifndef _ZIPREADER_HPP_
+#define _ZIPREADER_HPP_
 
 #include "Zip.hpp"
+#include "ZipSink.hpp"
 
 #include <string>
 #include <vector>
@@ -25,12 +26,11 @@ public:
     const Files& get_files() const;
     bool file_exists(std::string filename);
     bool equals_directory(const File& file, const std::string& directory);
-    const char *extract(std::string filename, size_t *out_sz = 0) throw (ZipReaderException);
-    static void destroy(const char *data);
+    void extract(std::string filename, ZipSink& sink) throw (ZipReaderException);
 
 private:
-    void throw_corrupt_file(const std::string& filename) throw (ZipReaderException);
-    void throw_inflate_failed(z_stream *z, const char *data, const std::string& msg) throw (ZipReaderException);
+    void throw_corrupt_file(const std::string& msg) throw (ZipReaderException);
+    void throw_inflate_failed(const std::string& msg) throw (ZipReaderException);
     const File& get_file(const std::string& filename) throw (ZipReaderException);
 };
 

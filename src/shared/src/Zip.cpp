@@ -4,6 +4,23 @@
 
 #include <cstring>
 
+ZStream::ZStream() throw (ZipException) {
+    z_stream *z = this;
+    memset(z, 0, sizeof(z_stream));
+    int status = inflateInit2(this, -MAX_WBITS);
+    if (status != Z_OK) {
+        throw ZipException("inflateInit2() failed");
+    }
+}
+
+ZStream::~ZStream() {
+    inflateEnd(this);
+}
+
+int ZStream::inflate(int flush) {
+    return ::inflate(this, flush);
+}
+
 Zip::Zip(const std::string& filename) throw (ZipException) : filename(filename), f(0) {
     size_t sz = filename.length();
     size_t pos = 0;
